@@ -1,4 +1,4 @@
-# Automaton Servo
+# Automaton Esp8266
 
 Automaton - Reactive State Machine Framework for Arduino
 
