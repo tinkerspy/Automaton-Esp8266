@@ -1,18 +1,14 @@
 #include <Automaton.h>
 #include <Atm_esp8266.h>
 
-Atm_esp8266_server server( 80 );
+Atm_esp8266_https_simple server( 80 );
 Atm_led led;
-
-const char cmdlist[] = "/ /on /off";
-enum { CMD_ROOT, CMD_ON, CMD_OFF };
 
 void setup() {
 
-  Serial.begin( 115200 );
-  
+  Serial.begin( 9600 );
   Serial.println( "Connecting to Wifi" );
-  WiFi.begin( "MySSID", "MyPassword" );
+  WiFi.begin( "MySSID", "MyWpaPassword" );
   while ( WiFi.status() != WL_CONNECTED ) {
     delay( 500 ); 
     Serial.println( "Wait..." );
@@ -23,24 +19,20 @@ void setup() {
   led.begin( D4 );
   
   server.begin()
-    .list( cmdlist )
-    .onCommand( [] ( int idx, int v, int up ) {
-      switch ( v ) {
-        case CMD_ROOT:        
-          return;
-        case CMD_ON:        
-          led.start();
-          server.send( 200, "text/plain", "LED blinking " );
-          return;
-        case CMD_OFF:
-          led.off();
-          server.send( 200, "text/plain", "LED off");
-          return;
-      }      
-    });    
+    .onRequest( "/on", led, led.EVT_ON )
+    .onRequest( "/off", led, led.EVT_OFF )
+    .onRequest( "/blink", led, led.EVT_START )
+    .onRequest( "/", [] ( int idx, int v, int up ) {
+      server.send( 
+        "<!DOCTYPE html><html><body>"
+        "<a href='on'>On</a><br>" 
+        "<a href='off'>Off</a><br>" 
+        "<a href='blink'>Blink</a><br>" 
+        "</body></html>"
+      );
+    });
 }
 
 void loop() {
   automaton.run();
 }
-
