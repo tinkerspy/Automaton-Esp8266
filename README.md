@@ -1,2 +1,7 @@
-# Automaton-Esp8266
-Esp8266 State Machines for the Automaton Framework
+# Automaton Esp8266
+
+Automaton - Reactive State Machine Framework for Arduino
+
+Automaton-Esp8266 library
+
+Read the [Automaton Wiki](https://github.com/tinkerspy/Automaton/wiki) for more information.
