@@ -13,7 +13,7 @@ void setup() {
   
   wifi.begin( "MySSID", "MyPASSWORD" )
     .onChange( true, [] ( int idx, int v, int up  ) {
-      Serial.print( "Connected to Wifi, address: ");
+      Serial.print( "Connected to Wifi, browse to: http://");
       Serial.println( wifi.ip() );
       server.start();
     })
