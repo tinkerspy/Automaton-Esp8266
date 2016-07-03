@@ -4,7 +4,7 @@
  * Add extra initialization code
  */
 
-Atm_esp8266_wifi& Atm_esp8266_wifi::begin() {
+Atm_esp8266_wifi& Atm_esp8266_wifi::begin( String ssid, String password ) {
   // clang-format off
   const static state_t state_table[] PROGMEM = {
     /*            ON_ENTER  ON_LOOP  ON_EXIT  EVT_START  EVT_STOP  EVT_TOGGLE  EVT_TIMER  EVT_CONNECT  EVT_DISCONNECT  ELSE */

@@ -7,17 +7,14 @@
 Atm_esp8266_httpd_simple& Atm_esp8266_httpd_simple::begin() {
   // clang-format off
   const static state_t state_table[] PROGMEM = {
-    /*               ON_ENTER  ON_LOOP  ON_EXIT  EVT_INCOMING  EVT_CMD  ELSE */
-    /*    IDLE */    ENT_IDLE, LP_IDLE,      -1,      REQUEST,      -1,   -1,
-    /* REQUEST */ ENT_REQUEST,      -1,      -1,           -1, COMMAND, IDLE,
-    /* COMMAND */ ENT_COMMAND,      -1,      -1,           -1,      -1, IDLE,
+    /*               ON_ENTER    ON_LOOP  ON_EXIT  EVT_INCOMING  EVT_CMD  EVT_START    ELSE */
+    /*    IDLE */    ENT_IDLE,        -1,      -1,           -1,      -1,    ACTIVE,     -1,
+    /*  ACTIVE */  ENT_ACTIVE, LP_ACTIVE,      -1,      REQUEST,      -1,        -1,     -1,
+    /* REQUEST */ ENT_REQUEST,        -1,      -1,           -1, COMMAND,        -1, ACTIVE,
+    /* COMMAND */ ENT_COMMAND,        -1,      -1,           -1,      -1,        -1, ACTIVE,
   };
   // clang-format on
   Machine::begin( state_table, ELSE );
-  server->onNotFound( [ this ] () {   
-    server->uri().toCharArray( incoming_request, 80 );
-  });
-  server->begin();
   return *this;          
 }
 
@@ -31,6 +28,8 @@ int Atm_esp8266_httpd_simple::event( int id ) {
       return incoming_request[0] > 0;
     case EVT_CMD:
       return 1;
+    case EVT_START:
+      return 0;
   }
   return 0;
 }
@@ -46,8 +45,14 @@ void Atm_esp8266_httpd_simple::action( int id ) {
   switch ( id ) {
     case ENT_IDLE:
       return;
-    case LP_IDLE:
+    case LP_ACTIVE:
       server->handleClient();
+      return;
+    case ENT_ACTIVE:
+      server->onNotFound( [ this ] () {   
+        server->uri().toCharArray( incoming_request, 80 );
+      });
+      server->begin();
       return;
     case ENT_REQUEST:
       return;
@@ -170,6 +175,11 @@ Atm_esp8266_httpd_simple& Atm_esp8266_httpd_simple::cmd() {
   return *this;
 }
 
+Atm_esp8266_httpd_simple& Atm_esp8266_httpd_simple::start() {
+  trigger( EVT_START );
+  return *this;
+}
+
 /*
  * onRequest() push connector variants ( slots 1, autostore 0, broadcast 0 )
  */
@@ -190,9 +200,10 @@ Atm_esp8266_httpd_simple& Atm_esp8266_httpd_simple::onRequest( atm_cb_push_t cal
 
 Atm_esp8266_httpd_simple& Atm_esp8266_httpd_simple::trace( Stream & stream ) {
   Machine::setTrace( &stream, atm_serial_debug::trace,
-    "ESP8266_SERVER\0EVT_INCOMING\0EVT_CMD\0ELSE\0IDLE\0REQUEST\0COMMAND" );
+    "ESP8266_HTTPD_SIMPLE\0EVT_INCOMING\0EVT_CMD\0EVT_START\0ELSE\0IDLE\0ACTIVE\0REQUEST\0COMMAND" );
   return *this;
 }
+
 
 
 

@@ -10,9 +10,9 @@
 class Atm_esp8266_httpd_simple: public Machine {
 
  public:
-  enum { IDLE, REQUEST, COMMAND }; // STATES
-  enum { EVT_INCOMING, EVT_CMD, ELSE }; // EVENTS
-  Atm_esp8266_httpd_simple( int port ) : Machine() {  static ESP8266WebServer esp_server( port ); server = &esp_server; };
+  enum { IDLE, ACTIVE, REQUEST, COMMAND }; // STATES
+  enum { EVT_INCOMING, EVT_CMD, EVT_START, ELSE }; // EVENTS
+  Atm_esp8266_httpd_simple( int port ) : Machine() { static ESP8266WebServer esp_server( port ); server = &esp_server; };
   Atm_esp8266_httpd_simple& begin( void );
   Atm_esp8266_httpd_simple& trace( Stream & stream );
   Atm_esp8266_httpd_simple& trigger( int event );
@@ -21,6 +21,7 @@ class Atm_esp8266_httpd_simple: public Machine {
   Atm_esp8266_httpd_simple& onRequest( atm_cb_push_t callback, int idx = 0 );
   Atm_esp8266_httpd_simple& onRequest( String cmd, Machine& machine, int event = 0 );
   Atm_esp8266_httpd_simple& onRequest( String cmd, atm_cb_push_t callback, int idx = 0 );
+  Atm_esp8266_httpd_simple& start( void );
   Atm_esp8266_httpd_simple& cmd( void );
   Atm_esp8266_httpd_simple& list( const char* cmds );
   Atm_esp8266_httpd_simple& send( int result, String content_type, String content );
@@ -34,7 +35,7 @@ class Atm_esp8266_httpd_simple: public Machine {
   int lookup( char * cmd, const char* cmdlist ); // Move to private!!!
 
  private:
-  enum { ENT_IDLE, LP_IDLE, ENT_REQUEST, ENT_COMMAND }; // ACTIONS
+  enum { ENT_IDLE, ENT_ACTIVE, LP_ACTIVE, ENT_REQUEST, ENT_COMMAND }; // ACTIONS
   enum { ON_COMMAND, CONN_MAX }; // CONNECTORS
   atm_connector connectors[CONN_MAX];
   atm_connector cmd_connectors[MAX_HANDLERS];
@@ -55,19 +56,23 @@ Automaton::ATML::begin - Automaton Markup Language
   <machine name="Atm_esp8266_httpd_simple">
     <states>
       <IDLE index="0" on_enter="ENT_IDLE" on_loop="LP_IDLE">
-        <EVT_INCOMING>REQUEST</EVT_INCOMING>
+        <EVT_START>ACTIVE</EVT_START>
       </IDLE>
-      <REQUEST index="1" on_enter="ENT_REQUEST">
+      <ACTIVE index="1" on_enter="ENT_ACTIVE">
+        <EVT_INCOMING>REQUEST</EVT_INCOMING>
+      </ACTIVE>
+      <REQUEST index="2" on_enter="ENT_REQUEST">
         <EVT_CMD>COMMAND</EVT_CMD>
         <ELSE>IDLE</ELSE>
       </REQUEST>
-      <COMMAND index="2" on_enter="ENT_COMMAND">
+      <COMMAND index="3" on_enter="ENT_COMMAND">
         <ELSE>IDLE</ELSE>
       </COMMAND>
     </states>
     <events>
       <EVT_INCOMING index="0" access="PRIVATE"/>
       <EVT_CMD index="1" access="MIXED"/>
+      <EVT_START index="2" access="MIXED"/>
     </events>
     <connectors>
       <COMMAND autostore="0" broadcast="0" dir="PUSH" slots="1"/>
