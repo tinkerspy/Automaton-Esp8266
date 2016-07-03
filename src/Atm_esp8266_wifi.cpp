@@ -87,7 +87,7 @@ Atm_esp8266_wifi& Atm_esp8266_wifi::trigger( int event ) {
  */
 
 int Atm_esp8266_wifi::state( void ) {
-  return Machine::state();
+  return current == ACTIVE ? 1 : 0;
 }
 
 /* Nothing customizable below this line                          
