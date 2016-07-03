@@ -3,7 +3,6 @@
 
 Atm_esp8266_wifi wifi;
 Atm_esp8266_httpd_simple server( 80 );
-Atm_timer timer;
 Atm_led led;
 
 void setup() {
