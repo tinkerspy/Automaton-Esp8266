@@ -20,12 +20,15 @@ class Atm_esp8266_wifi: public Machine {
   Atm_esp8266_wifi& stop( void );
   Atm_esp8266_wifi& toggle( void );
   IPAddress ip( void );
+  Atm_esp8266_wifi& led( int led, bool activeLow = false );
 
  private:
   enum { ENT_START, ENT_ACTIVE, ENT_DISCONN }; // ACTIONS
   enum { ON_CHANGE, CONN_MAX = 2 }; // CONNECTORS
   atm_connector connectors[CONN_MAX];
   atm_timer_millis timer;
+  int8_t indicator;
+  bool indicatorActiveLow;
   int event( int id ); 
   void action( int id ); 
 

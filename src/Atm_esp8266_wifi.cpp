@@ -19,6 +19,7 @@ Atm_esp8266_wifi& Atm_esp8266_wifi::begin( const char ssid[], const char passwor
   Machine::begin( state_table, ELSE );
   WiFi.begin( ssid, password );
   timer.set( 500 );
+  indicator = -1;
   return *this;          
 }
 
@@ -51,9 +52,11 @@ void Atm_esp8266_wifi::action( int id ) {
       return;
     case ENT_ACTIVE:
       push( connectors, ON_CHANGE, true, 1, 0 );
+      if ( indicator > -1 ) digitalWrite( indicator, !HIGH != !indicatorActiveLow );
       return;
     case ENT_DISCONN:
       push( connectors, ON_CHANGE, false, 0, 0 );
+      if ( indicator > -1 ) digitalWrite( indicator, !LOW != !indicatorActiveLow );
       return;
   }
 }
@@ -62,6 +65,13 @@ IPAddress Atm_esp8266_wifi::ip( void ) {
   return WiFi.localIP();
 }
 
+Atm_esp8266_wifi& Atm_esp8266_wifi::led( int led, bool activeLow /* = false */ ) {
+  indicator = led;
+  indicatorActiveLow = activeLow;
+  pinMode( indicator, OUTPUT );
+  digitalWrite( indicator, !LOW != !indicatorActiveLow );
+  return *this;
+}
 
 /* Optionally override the default trigger() method
  * Control how your machine processes triggers

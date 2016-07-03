@@ -9,15 +9,19 @@ Atm_led led;
 void setup() {
   Serial.begin( 9600 );
 
-  led.begin( D4 );
+  led.begin( D5 );
   Serial.println( "Connecting to WIFI" );
   
-  wifi.begin( "MySSID", "MyPassword" )
+  wifi.begin( "MySSID", "MyPASSWORD" )
     .onChange( true, [] ( int idx, int v, int up  ) {
       Serial.print( "Connected to Wifi, address: ");
       Serial.println( wifi.ip() );
       server.start();
     })
+    .onChange( false, [] ( int idx, int v, int up  ) {
+      Serial.println( "Lost Wifi connection");      
+    })
+    .led( LED_BUILTIN, true ) // Built in led is active low!
     .start();
 
   server.begin()
