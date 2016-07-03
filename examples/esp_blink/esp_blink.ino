@@ -1,6 +1,8 @@
 #include <Automaton.h>
 #include <Atm_esp8266.h>
 
+// Switch led on D5 on and off with this simple webserver
+
 Atm_esp8266_wifi wifi;
 Atm_esp8266_httpd_simple server( 80 );
 Atm_led led;
