@@ -7,13 +7,12 @@
 Atm_esp8266_wifi& Atm_esp8266_wifi::begin( const char ssid[], const char password[] ) {
   // clang-format off
   const static state_t state_table[] PROGMEM = {
-    /*               ON_ENTER  ON_LOOP  ON_EXIT  EVT_START  EVT_STOP  EVT_TOGGLE  EVT_TIMER  EVT_CONNECT  EVT_DISCONNECT  ELSE */
-    /*    IDLE */          -1,      -1,      -1,     START,       -1,      START,        -1,          -1,             -1,   -1,
-    /*   START */   ENT_START,      -1,      -1,        -1,       -1,         -1,        -1,          -1,             -1, WAIT,
-    /*    WAIT */          -1,      -1,      -1,        -1,       -1,         -1,     CHECK,          -1,             -1,   -1,
-    /*   CHECK */          -1,      -1,      -1,        -1,       -1,         -1,        -1,      ACTIVE,             -1, WAIT,
-    /*  ACTIVE */  ENT_ACTIVE,      -1,      -1,        -1,       -1,         -1,        -1,          -1,        DISCONN,   -1,
-    /* DISCONN */ ENT_DISCONN,      -1,      -1,        -1,       -1,         -1,        -1,          -1,             -1, WAIT,
+    /*            ON_ENTER  ON_LOOP  ON_EXIT  EVT_START  EVT_STOP  EVT_TOGGLE  EVT_TIMER  EVT_CONNECT  EVT_DISCONNECT  ELSE */
+    /*   IDLE */        -1,      -1,      -1,     START,       -1,      START,        -1,          -1,             -1,   -1,
+    /*  START */ ENT_START,      -1,      -1,        -1,       -1,         -1,        -1,          -1,             -1, WAIT,
+    /*   WAIT */        -1,      -1,      -1,        -1,       -1,         -1,     CHECK,          -1,             -1,   -1,
+    /*  CHECK */        -1,      -1,      -1,        -1,       -1,         -1,        -1,      ACTIVE,             -1, WAIT,
+    /* ACTIVE */        -1,      -1,      -1,        -1,       -1,         -1,        -1,          -1,           WAIT,   -1,
   };
   // clang-format on
   Machine::begin( state_table, ELSE );
@@ -49,19 +48,8 @@ void Atm_esp8266_wifi::action( int id ) {
   switch ( id ) {
     case ENT_START:
       return;
-    case ENT_ACTIVE:
-      push( connectors, ON_CHANGE, true, 1, 0 );
-      return;
-    case ENT_DISCONN:
-      push( connectors, ON_CHANGE, false, 0, 0 );
-      return;
   }
 }
-
-IPAddress Atm_esp8266_wifi::ip( void ) {
-  return WiFi.localIP();
-}
-
 
 /* Optionally override the default trigger() method
  * Control how your machine processes triggers
@@ -133,10 +121,9 @@ Atm_esp8266_wifi& Atm_esp8266_wifi::onChange( int sub, atm_cb_push_t callback, i
 
 Atm_esp8266_wifi& Atm_esp8266_wifi::trace( Stream & stream ) {
   Machine::setTrace( &stream, atm_serial_debug::trace,
-    "ESP8266_WIFI\0EVT_START\0EVT_STOP\0EVT_TOGGLE\0EVT_TIMER\0EVT_CONNECT\0EVT_DISCONNECT\0ELSE\0IDLE\0START\0WAIT\0CHECK\0ACTIVE\0DISCONN" );
+    "ESP8266_WIFI\0EVT_START\0EVT_STOP\0EVT_TOGGLE\0EVT_TIMER\0EVT_CONNECT\0EVT_DISCONNECT\0ELSE\0IDLE\0START\0WAIT\0CHECK\0ACTIVE" );
   return *this;
 }
-
 
 
 

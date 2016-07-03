@@ -5,10 +5,10 @@
 class Atm_esp8266_wifi: public Machine {
 
  public:
-  enum { IDLE, START, WAIT, CHECK, ACTIVE }; // STATES
+  enum { IDLE, START, WAIT, CHECK, ACTIVE, DISCONN }; // STATES
   enum { EVT_START, EVT_STOP, EVT_TOGGLE, EVT_TIMER, EVT_CONNECT, EVT_DISCONNECT, ELSE }; // EVENTS
   Atm_esp8266_wifi( void ) : Machine() {};
-  Atm_esp8266_wifi& begin(  String ssid, String password );
+  Atm_esp8266_wifi& begin( const char ssid[], const char password[] );
   Atm_esp8266_wifi& trace( Stream & stream );
   Atm_esp8266_wifi& trigger( int event );
   int state( void );
@@ -19,11 +19,13 @@ class Atm_esp8266_wifi: public Machine {
   Atm_esp8266_wifi& start( void );
   Atm_esp8266_wifi& stop( void );
   Atm_esp8266_wifi& toggle( void );
+  IPAddress ip( void );
 
  private:
-  enum { ENT_START }; // ACTIONS
+  enum { ENT_START, ENT_ACTIVE, ENT_DISCONN }; // ACTIONS
   enum { ON_CHANGE, CONN_MAX = 2 }; // CONNECTORS
   atm_connector connectors[CONN_MAX];
+  atm_timer_millis timer;
   int event( int id ); 
   void action( int id ); 
 
@@ -50,9 +52,12 @@ Automaton::ATML::begin - Automaton Markup Language
         <EVT_CONNECT>ACTIVE</EVT_CONNECT>
         <ELSE>WAIT</ELSE>
       </CHECK>
-      <ACTIVE index="4">
-        <EVT_DISCONNECT>WAIT</EVT_DISCONNECT>
+      <ACTIVE index="4" on_enter="ENT_ACTIVE">
+        <EVT_DISCONNECT>DISCONN</EVT_DISCONNECT>
       </ACTIVE>
+      <DISCONN index="5" on_enter="ENT_DISCONN">
+        <ELSE>WAIT</ELSE>
+      </DISCONN>
     </states>
     <events>
       <EVT_START index="0" access="PUBLIC"/>

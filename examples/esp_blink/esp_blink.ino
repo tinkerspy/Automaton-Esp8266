@@ -1,23 +1,25 @@
 #include <Automaton.h>
 #include <Atm_esp8266.h>
 
-Atm_esp8266_https_simple server( 80 );
+Atm_esp8266_wifi wifi;
+Atm_esp8266_httpd_simple server( 80 );
+Atm_timer timer;
 Atm_led led;
 
 void setup() {
-
   Serial.begin( 9600 );
-  Serial.println( "Connecting to Wifi" );
-  WiFi.begin( "MySSID", "MyWpaPassword" );
-  while ( WiFi.status() != WL_CONNECTED ) {
-    delay( 500 ); 
-    Serial.println( "Wait..." );
-  }
-  Serial.print( "Connected to Wifi, address: ");
-  Serial.println( WiFi.localIP() );
 
   led.begin( D4 );
+  Serial.println( "Connecting to WIFI" );
   
+  wifi.begin( "MySSID", "MyPassword" )
+    .onChange( true, [] ( int idx, int v, int up  ) {
+      Serial.print( "Connected to Wifi, address: ");
+      Serial.println( wifi.ip() );
+      server.start();
+    })
+    .start();
+
   server.begin()
     .onRequest( "/on", led, led.EVT_ON )
     .onRequest( "/off", led, led.EVT_OFF )
@@ -30,8 +32,7 @@ void setup() {
         "<a href='blink'>Blink</a><br>" 
         "</body></html>"
       );
-    })
-    .start();
+    });
 }
 
 void loop() {
