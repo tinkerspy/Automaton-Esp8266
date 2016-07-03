@@ -30,7 +30,8 @@ void setup() {
         "<a href='blink'>Blink</a><br>" 
         "</body></html>"
       );
-    });
+    })
+    .start();
 }
 
 void loop() {
