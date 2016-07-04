@@ -1,7 +1,7 @@
 #include <Automaton.h>
 #include <Atm_esp8266.h>
 
-// Switch led on D5 on and off with this simple webserver
+// Control a led on pin D5 with this simple webserver
 
 Atm_esp8266_wifi wifi;
 Atm_esp8266_httpd_simple server( 80 );
@@ -9,11 +9,15 @@ Atm_led led;
 
 void setup() {
   Serial.begin( 9600 );
+  Serial.println( "Connecting to WIFI" );
+
+  // The led to be controlled
 
   led.begin( D5 );
-  Serial.println( "Connecting to WIFI" );
+ 
+  // The Wifi machine manages the wifi connection
   
-  wifi.begin( "MySSID", "MyPASSWORD" )
+  wifi.begin( "MySSID", "MyPASSWORD" ) 
     .onChange( true, [] ( int idx, int v, int up  ) {
       Serial.print( "Connected to Wifi, browse to http://");
       Serial.println( wifi.ip() );
@@ -22,10 +26,12 @@ void setup() {
     .onChange( false, [] ( int idx, int v, int up  ) {
       Serial.println( "Lost Wifi connection");      
     })
-    .led( LED_BUILTIN, true ) // Built in led is active low!
+    .led( LED_BUILTIN, true ) // Esp8266 built in led shows wifi status
     .start();
 
-  server.begin()
+  // The Http server machine handles incoming requests
+
+  server.begin() 
     .onRequest( "/on", led, led.EVT_ON )
     .onRequest( "/off", led, led.EVT_OFF )
     .onRequest( "/blink", led, led.EVT_START )
