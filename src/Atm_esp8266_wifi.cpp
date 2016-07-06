@@ -17,7 +17,7 @@ Atm_esp8266_wifi& Atm_esp8266_wifi::begin( const char ssid[], const char passwor
   };
   // clang-format on
   Machine::begin( state_table, ELSE );
-  WiFi.begin( ssid, password );
+  WiFiMulti.addAP( ssid, password );
   timer.set( 500 );
   indicator = -1;
   return *this;          
@@ -32,9 +32,9 @@ int Atm_esp8266_wifi::event( int id ) {
     case EVT_TIMER:
       return timer.expired( this );
     case EVT_CONNECT:
-      return WiFi.status() == WL_CONNECTED;
+      return WiFiMulti.run() == WL_CONNECTED;
     case EVT_DISCONNECT:
-      return WiFi.status() != WL_CONNECTED;
+      return WiFiMulti.run() != WL_CONNECTED;
   }
   return 0;
 }

@@ -29,6 +29,7 @@ class Atm_esp8266_wifi: public Machine {
   atm_timer_millis timer;
   int8_t indicator;
   bool indicatorActiveLow;
+  ESP8266WiFiMulti WiFiMulti;
   int event( int id ); 
   void action( int id ); 
 
