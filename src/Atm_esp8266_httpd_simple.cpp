@@ -61,7 +61,8 @@ void Atm_esp8266_httpd_simple::action( int id ) {
         if ( cmd_connectors[i].mode() > 0 && cmd_strings[i].equals( incoming_request ) ) {
             cmd_connectors[i].push();
             if ( cmd_connectors[i].mode() == atm_connector::MODE_MACHINE ) {
-              send( reply_string.length() > 0 ? reply_string : "OK" );
+              send( reply_string && reply_string[0] > 0 ? reply_string : "OK" );
+//              send( "OK" );
             }
         }
       }
@@ -106,7 +107,7 @@ String Atm_esp8266_httpd_simple::arg( String name ) {
    return server->arg( name );
 }
 
-Atm_esp8266_httpd_simple Atm_esp8266_httpd_simple::reply( String s ) {
+Atm_esp8266_httpd_simple& Atm_esp8266_httpd_simple::reply( const char * s ) {
   reply_string = s;
   return *this;
 }
