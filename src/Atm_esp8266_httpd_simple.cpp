@@ -61,7 +61,7 @@ void Atm_esp8266_httpd_simple::action( int id ) {
         if ( cmd_connectors[i].mode() > 0 && cmd_strings[i].equals( incoming_request ) ) {
             cmd_connectors[i].push();
             if ( cmd_connectors[i].mode() == atm_connector::MODE_MACHINE ) {
-              send( "OK" );
+              send( reply_string.length() > 0 ? reply_string : "OK" );
             }
         }
       }
@@ -104,6 +104,11 @@ String Atm_esp8266_httpd_simple::arg( int id ) {
 
 String Atm_esp8266_httpd_simple::arg( String name ) {
    return server->arg( name );
+}
+
+Atm_esp8266_httpd_simple Atm_esp8266_httpd_simple::reply( String s ) {
+  reply_string = s;
+  return *this;
 }
 
 int Atm_esp8266_httpd_simple::lookup( char * cmd, const char* cmdlist ) {

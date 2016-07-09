@@ -31,6 +31,8 @@ class Atm_esp8266_httpd_simple: public Machine {
   String argName( int id );
   String arg( int id );
   String arg( String name );
+  Atm_esp8266_httpd_simple reply( String s );
+
 
   int lookup( char * cmd, const char* cmdlist ); // Move to private!!!
 
@@ -40,6 +42,7 @@ class Atm_esp8266_httpd_simple: public Machine {
   atm_connector connectors[CONN_MAX];
   atm_connector cmd_connectors[MAX_HANDLERS];
   String cmd_strings[MAX_HANDLERS];
+  String reply_string;
   const char* commands;
   ESP8266WebServer * server;
   char incoming_request[80];
