@@ -18,9 +18,9 @@ class Atm_esp8266_httpd_simple: public Machine {
   Atm_esp8266_httpd_simple& trigger( int event );
   int state( void );
   Atm_esp8266_httpd_simple& onRequest( Machine& machine, int event = 0 );
-  Atm_esp8266_httpd_simple& onRequest( atm_cb_push_t callback, int idx = 0 );
+  Atm_esp8266_httpd_simple& onRequest( atm_cb_push_t callback = 0, int idx = 0 );
   Atm_esp8266_httpd_simple& onRequest( String cmd, Machine& machine, int event = 0 );
-  Atm_esp8266_httpd_simple& onRequest( String cmd, atm_cb_push_t callback, int idx = 0 );
+  Atm_esp8266_httpd_simple& onRequest( String cmd, atm_cb_push_t callback = 0, int idx = 0 );
   Atm_esp8266_httpd_simple& start( void );
   Atm_esp8266_httpd_simple& cmd( void );
   Atm_esp8266_httpd_simple& list( const char* cmds );
@@ -43,6 +43,7 @@ class Atm_esp8266_httpd_simple: public Machine {
   const char* commands;
   ESP8266WebServer * server;
   char incoming_request[80];
+  uint8_t no_output;
   int lookup( char * cmd, const char* cmdlist ); 
   int event( int id ); 
   void action( int id ); 
