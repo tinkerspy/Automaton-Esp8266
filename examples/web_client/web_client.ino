@@ -1,8 +1,8 @@
 #include <Automaton.h>
 #include <Atm_esp8266.h>
 
-Atm_esp8266_httpc_simple client1, client2;
 Atm_esp8266_wifi wifi;
+Atm_esp8266_httpc_simple client1, client2;
 Atm_button button1, button2;
 
 // Two buttons on D2 & D7 send out /on and /off web requests
