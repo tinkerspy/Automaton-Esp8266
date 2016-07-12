@@ -5,6 +5,9 @@ Atm_esp8266_httpc_simple client;
 Atm_esp8266_wifi wifi;
 Atm_button button1, button2;
 
+// Two buttons on D2 & D7 send out /on and /off web requests
+// Could be used as a remote control for the esp_blink example
+
 void setup() {
 
   Serial.begin( 115200 );
