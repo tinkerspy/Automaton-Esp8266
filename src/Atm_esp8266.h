@@ -6,5 +6,6 @@
 #include <ESP8266WebServer.h>
 
 #include <Atm_esp8266_httpd_simple.hpp>
+#include <Atm_esp8266_httpc_simple.hpp>
 #include <Atm_esp8266_wifi.hpp>
 
