@@ -7,6 +7,9 @@ Atm_esp8266_wifi wifi;
 Atm_esp8266_httpd_simple server( 80 );
 Atm_led led;
 
+char ap_ssid[] = "MySSID";
+char ap_password[] = "MyPASSWORD";
+
 void setup() {
   Serial.begin( 9600 );
   Serial.println( "Connecting to WIFI" );
@@ -17,7 +20,7 @@ void setup() {
  
   // The Wifi machine manages the wifi connection
   
-  wifi.begin( "MySSID", "MyPASSWORD" ) 
+  wifi.begin( ap_ssid, ap_password ) 
     .onChange( true, [] ( int idx, int v, int up  ) {
       Serial.print( "Connected to Wifi, browse to http://");
       Serial.println( wifi.ip() );

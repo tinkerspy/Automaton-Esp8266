@@ -8,16 +8,20 @@ Atm_button button1, button2;
 // Two buttons on D2 & D7 send out /on and /off web requests
 // Could be used as a remote control for the esp_blink example
 
-void setup() {
+char ap_ssid[] = "MySSID";
+char ap_password[] = "MyPASSWORD";
+char client_host[] = "172.22.22.220";
 
-  wifi.begin( "MySSID", "MyPASSWORD" ) 
+void setup() {
+  
+  wifi.begin( ap_ssid, ap_password ) 
     .led( LED_BUILTIN, true ) // Esp8266 built in led shows wifi status
     .start();  
 
-  client1.begin( "172.22.22.220" )
+  client1.begin( client_host )
     .get( "/on" );        
-  client2.begin( "172.22.22.220" )
-    .get( "/off" ); // 23 positions in a 1 night stand
+  client2.begin( client_host )
+    .get( "/off" );
         
   button1.begin( D2 )
     .onPress( client1, client1.EVT_START );
