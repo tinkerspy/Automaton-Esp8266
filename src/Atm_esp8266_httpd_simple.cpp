@@ -74,6 +74,7 @@ void Atm_esp8266_httpd_simple::action( int id ) {
         send( reply_string && reply_string[0] > 0 ? reply_string : "OK" );
       }
       incoming_request[0] = '\0';
+      server->client().stopAll();
       return;
   }
 }
