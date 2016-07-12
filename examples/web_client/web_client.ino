@@ -44,7 +44,7 @@ void setup() {
   button2.begin( D7 )
     .onPress( [] ( int idx, int v, int up ) {
       client
-        .get( "/off" )
+        .get( "/off" ) // 23 positions in a one night stand
         .start();
     });
 
