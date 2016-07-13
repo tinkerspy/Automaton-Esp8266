@@ -55,7 +55,7 @@ Automaton::ATML::begin - Automaton Markup Language
         <EVT_START>CONNECT</EVT_START>
       </IDLE>
       <CONNECT index="1" on_enter="ENT_CONNECT">
-        <EVT_LOST>IDLE</EVT_LOST>
+        <EVT_LOST>TIMEOUT</EVT_LOST>
         <ELSE>SEND</ELSE>
       </CONNECT>
       <SEND index="2" on_enter="ENT_SEND">
