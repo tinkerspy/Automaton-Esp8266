@@ -15,6 +15,8 @@ class Atm_esp8266_httpc_simple: public Machine {
   int state( void );
   Atm_esp8266_httpc_simple& onFinish( Machine& machine, int event = 0 );
   Atm_esp8266_httpc_simple& onFinish( atm_cb_push_t callback, int idx = 0 );
+  Atm_esp8266_httpc_simple& onStart( Machine& machine, int event = 0 );
+  Atm_esp8266_httpc_simple& onStart( atm_cb_push_t callback, int idx = 0 );
   Atm_esp8266_httpc_simple& start( void );
   Atm_esp8266_httpc_simple& get(  String path, String data = "" );
   Atm_esp8266_httpc_simple& post(  String path, String data = "" );
@@ -27,13 +29,14 @@ class Atm_esp8266_httpc_simple: public Machine {
 
  private:
   enum { ENT_CONNECT, ENT_SEND, ENT_READ, ENT_DONE, ENT_TIMEOUT }; // ACTIONS
-  enum { ON_FINISH, CONN_MAX }; // CONNECTORS
+  enum { ON_FINISH, ON_START, CONN_MAX }; // CONNECTORS
   atm_connector connectors[CONN_MAX];
   String request_data;
   String request_path;
   String response_data;
   const char * client_host;
   int client_port;
+  int sub_event;
   WiFiClient client;
   atm_timer_millis timeout;
   bool post_flag;
@@ -59,12 +62,12 @@ Automaton::ATML::begin - Automaton Markup Language
         <ELSE>WAIT</ELSE>
       </SEND>
       <WAIT index="3">
-        <EVT_LOST>IDLE</EVT_LOST>
+        <EVT_LOST>DONE</EVT_LOST>
         <EVT_AVAILABLE>READ</EVT_AVAILABLE>
         <EVT_TIMER>TIMEOUT</EVT_TIMER>
       </WAIT>
       <READ index="4" on_enter="ENT_READ">
-        <EVT_LOST>IDLE</EVT_LOST>
+        <EVT_LOST>DONE</EVT_LOST>
         <ELSE>WAIT</ELSE>
       </READ>
       <DONE index="5" on_enter="ENT_DONE">
@@ -82,6 +85,7 @@ Automaton::ATML::begin - Automaton Markup Language
     </events>
     <connectors>
       <FINISH autostore="0" broadcast="0" dir="PUSH" slots="1"/>
+      <START autostore="0" broadcast="0" dir="PUSH" slots="1"/>
     </connectors>
     <methods>
     </methods>

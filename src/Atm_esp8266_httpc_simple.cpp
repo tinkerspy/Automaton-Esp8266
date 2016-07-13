@@ -54,6 +54,7 @@ void Atm_esp8266_httpc_simple::action( int id ) {
       client.connect( client_host, client_port );
       return;
     case ENT_SEND:
+      push( connectors, ON_START, 0, sub_event, 0 );
       response_data = "";
       if ( post_flag ) {
         request.concat( "POST " );
@@ -98,7 +99,10 @@ void Atm_esp8266_httpc_simple::action( int id ) {
  */
 
 Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::trigger( int event ) {
-  Machine::trigger( event );
+  if ( event >= EVT_START ) {
+    sub_event = event - EVT_START;
+    Machine::trigger( EVT_START );
+  }
   return *this;
 }
 
@@ -176,6 +180,20 @@ Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::onFinish( Machine& machine, 
 
 Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::onFinish( atm_cb_push_t callback, int idx ) {
   onPush( connectors, ON_FINISH, 0, 1, 1, callback, idx );
+  return *this;
+}
+
+/*
+ * onStart() push connector variants ( slots 1, autostore 0, broadcast 0 )
+ */
+
+Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::onStart( Machine& machine, int event ) {
+  onPush( connectors, ON_START, 0, 1, 1, machine, event );
+  return *this;
+}
+
+Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::onStart( atm_cb_push_t callback, int idx ) {
+  onPush( connectors, ON_START, 0, 1, 1, callback, idx );
   return *this;
 }
 
