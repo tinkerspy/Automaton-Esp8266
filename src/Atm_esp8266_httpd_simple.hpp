@@ -22,7 +22,6 @@ class Atm_esp8266_httpd_simple: public Machine {
   Atm_esp8266_httpd_simple& onRequest( String cmd, Machine& machine, int event = 0 );
   Atm_esp8266_httpd_simple& onRequest( String cmd, atm_cb_push_t callback = 0, int idx = 0 );
   Atm_esp8266_httpd_simple& start( void );
-  Atm_esp8266_httpd_simple& cmd( void );
   Atm_esp8266_httpd_simple& list( const char* cmds );
   Atm_esp8266_httpd_simple& send( int result, String content_type, String content );
   Atm_esp8266_httpd_simple& send( String content );
