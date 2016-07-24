@@ -31,6 +31,7 @@ class Atm_esp8266_httpd_simple: public Machine {
   String arg( int id );
   String arg( String name );
   Atm_esp8266_httpd_simple& reply( const char * s );
+  Atm_esp8266_httpd_simple& cmd( void );
 
  private:
   enum { ENT_IDLE, ENT_ACTIVE, LP_ACTIVE, ENT_REQUEST, ENT_COMMAND }; // ACTIONS
