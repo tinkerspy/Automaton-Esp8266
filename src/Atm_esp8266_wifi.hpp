@@ -20,6 +20,8 @@ class Atm_esp8266_wifi: public Machine {
   Atm_esp8266_wifi& stop( void );
   Atm_esp8266_wifi& toggle( void );
   IPAddress ip( void );
+  IPAddress netmask( void );
+  IPAddress broadcastAddress( void );
   Atm_esp8266_wifi& led( int led, bool activeLow = false );
 
  private:
@@ -31,6 +33,7 @@ class Atm_esp8266_wifi: public Machine {
   bool indicatorActiveLow;
   int event( int id ); 
   void action( int id ); 
+  
 
 };
 

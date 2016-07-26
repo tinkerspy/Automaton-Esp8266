@@ -9,7 +9,7 @@ class Atm_esp8266_httpc_simple: public Machine {
   enum { IDLE, CONNECT, SEND, WAIT, READ, DONE, TIMEOUT }; // STATES
   enum { EVT_LOST, EVT_AVAILABLE, EVT_TIMER, EVT_START, ELSE }; // EVENTS
   Atm_esp8266_httpc_simple( void ) : Machine() {};
-  Atm_esp8266_httpc_simple& begin(  const char * host, int port = 80 );
+  Atm_esp8266_httpc_simple& begin( const char * host, int port = 80 );
   Atm_esp8266_httpc_simple& trace( Stream & stream );
   Atm_esp8266_httpc_simple& trigger( int event );
   int state( void );
@@ -17,9 +17,9 @@ class Atm_esp8266_httpc_simple: public Machine {
   Atm_esp8266_httpc_simple& onFinish( atm_cb_push_t callback, int idx = 0 );
   Atm_esp8266_httpc_simple& onStart( Machine& machine, int event = 0 );
   Atm_esp8266_httpc_simple& onStart( atm_cb_push_t callback, int idx = 0 );
-  Atm_esp8266_httpc_simple& start( void );
-  Atm_esp8266_httpc_simple& get(  String path, String data = "" );
-  Atm_esp8266_httpc_simple& post(  String path, String data = "" );
+  Atm_esp8266_httpc_simple& start( int subCode = 0 );
+  Atm_esp8266_httpc_simple& get( String path, String data = "", uint16_t maxResponseSize = 1024 );
+  Atm_esp8266_httpc_simple& post( String path, String data = "", uint16_t maxResponseSize = 1024 );
   String content();
   String headers();
   int responseCode();
@@ -37,6 +37,7 @@ class Atm_esp8266_httpc_simple: public Machine {
   const char * client_host;
   int client_port;
   int sub_event;
+  uint16_t max_response_size;
   WiFiClient client;
   atm_timer_millis timeout;
   bool post_flag;

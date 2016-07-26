@@ -65,6 +65,21 @@ IPAddress Atm_esp8266_wifi::ip( void ) {
   return WiFi.localIP();
 }
 
+IPAddress Atm_esp8266_wifi::netmask( void ) {
+  return WiFi.subnetMask();
+}
+
+IPAddress Atm_esp8266_wifi::broadcastAddress( void ) {
+
+  IPAddress r;
+  IPAddress ip = this->ip();
+  IPAddress netmask = this->netmask();
+  for ( uint8_t i = 0; i < 4; i++ ) {
+    r[i] = ip[i] | ~netmask[i];
+  }
+  return r;
+}
+
 Atm_esp8266_wifi& Atm_esp8266_wifi::led( int led, bool activeLow /* = false */ ) {
   indicator = led;
   indicatorActiveLow = activeLow;

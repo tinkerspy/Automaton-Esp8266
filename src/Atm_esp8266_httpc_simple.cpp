@@ -21,6 +21,7 @@ Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::begin( const char * host, in
   client_host = host;
   client_port = port;
   timeout.set( 60000 );
+  max_response_size = 1024;
   return *this;          
 }
 
@@ -82,11 +83,13 @@ void Atm_esp8266_httpc_simple::action( int id ) {
       return;
     case ENT_READ:
       while ( client.available() ) {
-        response_data += (char) client.read();
+        if ( response_data.length() < max_response_size ) {
+          response_data += (char) client.read();
+        }
       }
       return;
     case ENT_DONE:
-      push( connectors, ON_FINISH, 0, 0, 0 );
+      push( connectors, ON_FINISH, 0, sub_event, 0 );
       return;
     case ENT_TIMEOUT:
       response_data = "HTTP/1.1 400 Fail\r\n";
@@ -114,16 +117,18 @@ int Atm_esp8266_httpc_simple::state( void ) {
   return Machine::state();
 }
 
-Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::get( String path, String data ) {
+Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::get( String path, String data, uint16_t maxResponseSize /* = 1024 */ ) {
   request_path = path;
   request_data = data;
+  max_response_size = maxResponseSize;
   post_flag = false;
   return *this;
 }
 
-Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::post( String path, String data ) {
+Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::post( String path, String data, uint16_t maxResponseSize /* = 1024 */  ) {
   request_path = path;
   request_data = data;
+  max_response_size = maxResponseSize;
   post_flag = true;
   return *this;
 }
@@ -164,8 +169,8 @@ bool Atm_esp8266_httpc_simple::is_error() {
  *
  */
 
-Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::start() {
-  trigger( EVT_START );
+Atm_esp8266_httpc_simple& Atm_esp8266_httpc_simple::start( int subCode /* = 0 */ ) {
+  trigger( EVT_START + subCode );
   return *this;
 }
 
