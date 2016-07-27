@@ -2,6 +2,17 @@
 
 #include <Automaton.h>
 
+#define ATM_WIFI_MAX_NODES 16
+#define ATM_WIFI_MIRROR_PORT 55056
+
+union mirror_packet_t {
+  char b[6];
+  struct {
+    uint32_t address;
+    int16_t value;
+  };
+};
+
 class Atm_esp8266_wifi: public Machine {
 
  public:
@@ -23,19 +34,25 @@ class Atm_esp8266_wifi: public Machine {
   IPAddress netmask( void );
   IPAddress broadcastAddress( void );
   Atm_esp8266_wifi& led( int led, bool activeLow = false );
+  uint16_t reg( const char name[] );
+  uint16_t reg( uint32_t );
+  Atm_esp8266_wifi & transmit( uint16_t mirrorId, int v );
 
  private:
   enum { ENT_START, ENT_ACTIVE, ENT_DISCONN }; // ACTIONS
   enum { ON_CHANGE, CONN_MAX = 2 }; // CONNECTORS
   atm_connector connectors[CONN_MAX];
+  atm_connector mirror_connectors[ATM_WIFI_MAX_NODES];
+  uint32_t mirror_nodes[ATM_WIFI_MAX_NODES];
   atm_timer_millis timer;
   int8_t indicator;
   bool indicatorActiveLow;
+  WiFiUDP udp;
   int event( int id ); 
   void action( int id ); 
-  
-
+ 
 };
+
 
 /*
 Automaton::ATML::begin - Automaton Markup Language

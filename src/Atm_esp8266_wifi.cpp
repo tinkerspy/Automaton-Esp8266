@@ -1,5 +1,9 @@
 #include "Atm_esp8266.h"
 
+// The global wifi object
+
+Atm_esp8266_wifi wifi;
+
 /* Add optional parameters for the state machine to begin()
  * Add extra initialization code
  */
@@ -22,6 +26,58 @@ Atm_esp8266_wifi& Atm_esp8266_wifi::begin( const char ssid[], const char passwor
   indicator = -1;
   return *this;          
 }
+
+/*
+ * Converts a string to a 32 bit (uint32_t) hash using the first 8 chars of sha1()
+ * then registers the result as a 32 bit mirror node-id
+ */
+
+uint16_t Atm_esp8266_wifi::reg( const char name[] ) {
+  char buf[9];
+  sha1( name ).toCharArray( buf, 9 ); 
+  return reg( strtoul( buf, NULL, 16 ) );
+}
+
+/*
+ * Registers a 32 bit mirror node-id 
+ */
+
+uint16_t Atm_esp8266_wifi::reg( uint32_t v ) {
+  int id = 0;
+  for ( int i = 0; i < ATM_WIFI_MAX_NODES; i++ ) {
+    if ( mirror_nodes[i] == 0 ) {
+      id = i;
+    }
+  }
+  mirror_nodes[id] = v;
+/*
+  Serial.print( "Stored " ); 
+  Serial.print( v, HEX ); 
+  Serial.print( " at " );
+  Serial.println( id ); 
+*/
+  return id;  
+}
+
+// WARNING: Filter own packets!
+// WARNING: Do not send packets as a result of other packets!
+// WARNING: Ignore packets with node-id 0!
+
+/* 
+ * Broadcasts a 16 bit integer value over the local network packaged with
+ * a pre-registered 32 bit mirror node-id 
+ */
+
+Atm_esp8266_wifi & Atm_esp8266_wifi::transmit( uint16_t nodeId, int v ) { 
+  mirror_packet_t packet;
+  packet.address = mirror_nodes[nodeId];
+  packet.value = v;
+  udp.beginPacket( wifi.broadcastAddress(), ATM_WIFI_MIRROR_PORT ); 
+  udp.write( packet.b, sizeof( packet.b ) );
+  udp.endPacket();
+  return *this;  
+}
+
 
 /* Add C++ code for each internally handled event (input) 
  * The code must return 1 to trigger the event
@@ -53,6 +109,7 @@ void Atm_esp8266_wifi::action( int id ) {
     case ENT_ACTIVE:
       push( connectors, ON_CHANGE, true, 1, 0 );
       if ( indicator > -1 ) digitalWrite( indicator, !HIGH != !indicatorActiveLow );
+      udp.begin( 2309 );
       return;
     case ENT_DISCONN:
       push( connectors, ON_CHANGE, false, 0, 0 );
@@ -70,7 +127,6 @@ IPAddress Atm_esp8266_wifi::netmask( void ) {
 }
 
 IPAddress Atm_esp8266_wifi::broadcastAddress( void ) {
-
   IPAddress r;
   IPAddress ip = this->ip();
   IPAddress netmask = this->netmask();
