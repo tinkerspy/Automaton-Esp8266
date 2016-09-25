@@ -11,13 +11,15 @@ Atm_esp8266_wifi wifi;
 Atm_esp8266_wifi& Atm_esp8266_wifi::begin( const char ssid[], const char password[] ) {
   // clang-format off
   const static state_t state_table[] PROGMEM = {
-    /*               ON_ENTER  ON_LOOP  ON_EXIT  EVT_START  EVT_STOP  EVT_TOGGLE  EVT_TIMER  EVT_CONNECT  EVT_DISCONNECT  ELSE */
-    /*    IDLE */          -1,      -1,      -1,     START,       -1,      START,        -1,          -1,             -1,   -1,
-    /*   START */   ENT_START,      -1,      -1,        -1,       -1,         -1,        -1,          -1,             -1, WAIT,
-    /*    WAIT */          -1,      -1,      -1,        -1,       -1,         -1,     CHECK,          -1,             -1,   -1,
-    /*   CHECK */          -1,      -1,      -1,        -1,       -1,         -1,        -1,      ACTIVE,             -1, WAIT,
-    /*  ACTIVE */  ENT_ACTIVE,      -1,      -1,        -1,       -1,         -1,        -1,          -1,        DISCONN,   -1,
-    /* DISCONN */ ENT_DISCONN,      -1,      -1,        -1,       -1,         -1,        -1,          -1,             -1, WAIT,
+    /*               ON_ENTER  ON_LOOP  ON_EXIT  EVT_START  EVT_STOP  EVT_TOGGLE  EVT_TIMER  EVT_CONNECT  EVT_DISCONNECT  EVT_PACKET   ELSE */
+    /*    IDLE */          -1,      -1,      -1,     START,       -1,      START,        -1,          -1,             -1,         -1,    -1,
+    /*   START */   ENT_START,      -1,      -1,        -1,       -1,         -1,        -1,          -1,             -1,         -1,    WAIT,
+    /*    WAIT */          -1,      -1,      -1,        -1,       -1,         -1,     CHECK,          -1,             -1,         -1,      -1,
+    /*   CHECK */          -1,      -1,      -1,        -1,       -1,         -1,        -1,      ACTIVE,             -1,         -1,    WAIT,
+    /*  ACTIVE */  ENT_ACTIVE,      -1,      -1,        -1,       -1,         -1,        -1,          -1,        DISCONN,         -1, WAITPKT,
+    /* WAITPKT */          -1,      -1,      -1,        -1,       -1,         -1,        -1,          -1,        DISCONN,    PKTRCVD,      -1,
+    /* PKTRCVD */ ENT_PKTRCVD,      -1,      -1,        -1,       -1,         -1,        -1,          -1,             -1,         -1, WAITPKT,
+    /* DISCONN */ ENT_DISCONN,      -1,      -1,        -1,       -1,         -1,        -1,          -1,             -1,         -1,    WAIT,
   };
   // clang-format on
   Machine::begin( state_table, ELSE );
@@ -32,24 +34,26 @@ Atm_esp8266_wifi& Atm_esp8266_wifi::begin( const char ssid[], const char passwor
  * then registers the result as a 32 bit mirror node-id
  */
 
-uint16_t Atm_esp8266_wifi::reg( const char name[] ) {
+uint16_t Atm_esp8266_wifi::reg( const char name[], atm_cb_mirror_t callback  ) {
   char buf[9];
   sha1( name ).toCharArray( buf, 9 ); 
-  return reg( strtoul( buf, NULL, 16 ) );
+  return reg( strtoul( buf, NULL, 16 ), callback );
 }
 
 /*
  * Registers a 32 bit mirror node-id 
  */
 
-uint16_t Atm_esp8266_wifi::reg( uint32_t v ) {
+uint16_t Atm_esp8266_wifi::reg( uint32_t v, atm_cb_mirror_t callback ) {
   int id = 0;
   for ( int i = 0; i < ATM_WIFI_MAX_NODES; i++ ) {
-    if ( mirror_nodes[i] == 0 ) {
+    if ( mirror_regs[i].flags == 0 ) {
       id = i;
     }
   }
-  mirror_nodes[id] = v;
+  mirror_regs[id].callback = callback;
+  mirror_regs[id].address = v;
+  mirror_regs[id].flags = 1;
 /*
   Serial.print( "Stored " ); 
   Serial.print( v, HEX ); 
@@ -63,16 +67,28 @@ uint16_t Atm_esp8266_wifi::reg( uint32_t v ) {
 // WARNING: Do not send packets as a result of other packets!
 // WARNING: Ignore packets with node-id 0!
 
+// Authorative node is the one that sent the last original state and keeps resending
+// do not resnd after receiving a more recent update for the node-id ( one sender/many receivers )
+// switch to sender whenever the node's own state changes autonomously
+// mirrors can be dictators: (other nodes *must* follow) {is this really necessary?}
+
 /* 
  * Broadcasts a 16 bit integer value over the local network packaged with
  * a pre-registered 32 bit mirror node-id 
  */
 
-Atm_esp8266_wifi & Atm_esp8266_wifi::transmit( uint16_t nodeId, int v ) { 
-  mirror_packet_t packet;
-  packet.address = mirror_nodes[nodeId];
+Atm_esp8266_wifi & Atm_esp8266_wifi::transmit( uint16_t nodeId, char op, int v ) { 
+  atm_mirror_packet_t packet;
+  packet.address = mirror_regs[nodeId].address;
   packet.value = v;
-  udp.beginPacket( wifi.broadcastAddress(), ATM_WIFI_MIRROR_PORT ); 
+  packet.operation = op;
+  packet.signature = 'A';
+  uint8_t checksum = 0;
+  for ( uint8_t i = 0; i < ( sizeof( packet.b ) - 1 ); i++ ) {
+    checksum += packet.b[i]; 
+  }
+  packet.checksum = checksum;
+  udp.beginPacket( wifi.broadcastAddress(), ATM_WIFI_MIRROR_REMOTE_PORT ); 
   udp.write( packet.b, sizeof( packet.b ) );
   udp.endPacket();
   return *this;  
@@ -82,7 +98,8 @@ Atm_esp8266_wifi & Atm_esp8266_wifi::transmit( uint16_t nodeId, int v ) {
 /* Add C++ code for each internally handled event (input) 
  * The code must return 1 to trigger the event
  */
-
+ 
+ 
 int Atm_esp8266_wifi::event( int id ) {
   switch ( id ) {
     case EVT_TIMER:
@@ -91,6 +108,8 @@ int Atm_esp8266_wifi::event( int id ) {
       return WiFi.status() == WL_CONNECTED;
     case EVT_DISCONNECT:
       return WiFi.status() != WL_CONNECTED;
+    case EVT_PACKET:
+      return udp.parsePacket() > 0;
   }
   return 0;
 }
@@ -103,17 +122,48 @@ int Atm_esp8266_wifi::event( int id ) {
  */
 
 void Atm_esp8266_wifi::action( int id ) {
+  atm_mirror_packet_t pkt;
   switch ( id ) {
     case ENT_START:
       return;
     case ENT_ACTIVE:
       push( connectors, ON_CHANGE, true, 1, 0 );
       if ( indicator > -1 ) digitalWrite( indicator, !HIGH != !indicatorActiveLow );
-      udp.begin( 2309 );
+      udp.begin( ATM_WIFI_MIRROR_REMOTE_PORT );
       return;
     case ENT_DISCONN:
       push( connectors, ON_CHANGE, false, 0, 0 );
       if ( indicator > -1 ) digitalWrite( indicator, !LOW != !indicatorActiveLow );
+      return;
+    case ENT_PKTRCVD:
+      udp.read( pkt.b, sizeof( pkt.b ) );
+      Serial.println( udp.remoteIP() );
+      if ( pkt.signature == 'A' ) { // Check #1: signature 'A'
+        uint8_t checksum = 0;
+        for ( uint8_t i = 0; i < ( sizeof( pkt.b ) - 1 ); i++ ) {
+          checksum += pkt.b[i]; 
+        }
+        if ( pkt.checksum == checksum ) { // Check #2: checksum match
+          int id = -1;
+          for ( int i = 0; i < ATM_WIFI_MAX_NODES; i++ ) { // Check #3: address match
+            if ( mirror_regs[i].address == pkt.address ) {
+              id = i;
+            }
+          }
+          if ( id > -1 ) {
+            ( *mirror_regs[id].callback )( pkt.value ); // Send sender IP as well
+          } else {
+            Serial.println( "Address unknown" );
+          }
+        } else {
+          Serial.print( "Failed checksum:" );
+          Serial.print( checksum, HEX );
+          Serial.print( " != " );
+          Serial.println( pkt.checksum, HEX );
+        }       
+      } else {
+        Serial.println( "Failed signature" );
+      }
       return;
   }
 }
@@ -214,7 +264,7 @@ Atm_esp8266_wifi& Atm_esp8266_wifi::onChange( int sub, atm_cb_push_t callback, i
 
 Atm_esp8266_wifi& Atm_esp8266_wifi::trace( Stream & stream ) {
   Machine::setTrace( &stream, atm_serial_debug::trace,
-    "ESP8266_WIFI\0EVT_START\0EVT_STOP\0EVT_TOGGLE\0EVT_TIMER\0EVT_CONNECT\0EVT_DISCONNECT\0ELSE\0IDLE\0START\0WAIT\0CHECK\0ACTIVE\0DISCONN" );
+    "ESP8266_WIFI\0EVT_START\0EVT_STOP\0EVT_TOGGLE\0EVT_TIMER\0EVT_CONNECT\0EVT_DISCONNECT\0EVT_PACKET\0ELSE\0IDLE\0START\0WAIT\0CHECK\0ACTIVE\0WAITPKT\0PKTRCVD\0DISCONN" );
   return *this;
 }
 
