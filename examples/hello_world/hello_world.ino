@@ -3,7 +3,6 @@
 
 // Minimal Hello World webserver
 
-Atm_esp8266_wifi wifi;
 Atm_esp8266_httpd_simple server( 80 );
 
 void setup() {

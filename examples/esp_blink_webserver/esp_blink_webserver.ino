@@ -3,7 +3,6 @@
 
 // Control a led on pin D5 with this simple webserver
 
-Atm_esp8266_wifi wifi;
 Atm_esp8266_httpd_simple server( 80 );
 Atm_led led;
 
