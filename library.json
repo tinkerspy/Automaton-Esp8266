@@ -1,5 +1,6 @@
 {
     "name": "Automaton Esp8233",
+    "version": "0.1.0",
     "keywords": "state, machine, servo, esp8266",
     "description": "Esp8266 State Machines for the Automaton Framework",
     "authors":
