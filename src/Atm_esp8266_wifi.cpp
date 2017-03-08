@@ -24,6 +24,7 @@ Atm_esp8266_wifi& Atm_esp8266_wifi::begin( const char ssid[], const char passwor
   // clang-format on
   Machine::begin( state_table, ELSE );
   WiFi.begin( ssid, password );
+  WiFi.mode( WIFI_STA );
   timer.set( 500 );
   indicator = -1;
   return *this;          
