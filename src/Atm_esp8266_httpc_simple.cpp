@@ -87,12 +87,14 @@ void Atm_esp8266_httpc_simple::action( int id ) {
           response_data += (char) client.read();
         }
       }
+      if (response_data.endsWith("</html>\r\n")) client.stop();
       return;
     case ENT_DONE:
       push( connectors, ON_FINISH, 0, sub_event, 0 );
       return;
     case ENT_TIMEOUT:
       response_data = "HTTP/1.1 400 Fail\r\n";
+      push( connectors, ON_FINISH, 0, sub_event, 0 );
       return;
   }
 }
